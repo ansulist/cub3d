@@ -1,0 +1,140 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   envs.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: juhaamid <juhaamid@student.42abudhabi.a    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/08/09 10:49:26 by jperinch          #+#    #+#             */
+/*   Updated: 2023/08/31 20:35:47 by juhaamid         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "minishell.h"
+
+void sort_env(t_list *env)
+{
+	int index;
+	t_list *temp;
+	t_list *temp1;
+	temp = env;
+	temp1 = env;
+	while (temp1 && temp1->next != NULL)
+	{
+		index = 0;
+		while (temp)
+		{
+			if (ft_strncmp(temp1->key,temp->key,ft_strlen(temp->key)) > 0)
+				index++;
+			temp = temp->next;
+		}
+		if (temp1)
+			temp1->index = index;
+		if (temp1 && temp1->next != NULL)
+			temp1 = temp1->next;
+		temp = env;
+	}
+}
+
+void export(paths *env)
+{
+	t_list	*temp;
+	int		i;
+	int		len;
+
+	temp = env->envp;
+	i = 0;
+	len = ft_lstsize(env->envp);
+	while (i < len)
+	{
+		while (env->envp)
+		{
+			if (i == env->envp->index || (i == len && -1 ==env->envp->index))
+				printf("declare -x %s=\"%s\"\n",env->envp->key,env->envp->value);
+			env->envp = env->envp->next;
+		}
+		env->envp=temp;
+		i++;
+	}
+}
+void export_add_back(paths *env)
+{
+	
+}
+
+void	print_env(t_list *env)
+{
+	while (env)
+	{
+		if(env->key && env->value)
+		{
+			printf("%s=%s\n", env->key, env->value);
+		}
+		env = env->next;
+	}
+}
+
+t_list *list_node(char *data)
+{
+	int i; 
+	i = 0;
+	t_list *env;
+	env = malloc(sizeof(t_list));
+	if (!env)
+		return(NULL);
+	while (data[i] && data[i] != '=')
+		i++;
+	env->key = ft_substr(data, 0, i);
+	env->index = -1;
+	env->value = ft_strdup(data + i + 1);
+	env->next = NULL;
+	return(env);
+}
+
+t_list *handle_env( char **env)
+{
+	t_list *temp;
+	t_list *temp2;
+	t_list *new_env;
+	int i;
+
+	i = 0;
+	temp2 = NULL;
+	new_env = NULL;
+	while (env[i])
+	{
+		temp = list_node(env[i]);
+		if (!new_env)
+			new_env = temp;
+		else
+			temp2->next = temp;
+		temp2 = temp;
+		i++;
+	}
+	return (new_env);
+}
+
+
+int main (int ac, char **av, char **envp)
+{
+	(void)ac;
+	(void)av;
+	paths	data;
+	
+	(data.env) = envp;
+	data.envp = handle_env(data.env);
+	sort_env(data.envp);
+	export(&data);
+	if (ft_strcmp(av[1],  "export"))
+	{
+		export(&data);
+	}
+	else if (ft_strcmp(av[1], "envp"))
+	{
+		print_env(data->envp);
+	}
+
+}
+
+// if export + smth smth add it to export then traversing til the end then adding the command..
+// check to see if cmd has an = sign .. if so add it to env
